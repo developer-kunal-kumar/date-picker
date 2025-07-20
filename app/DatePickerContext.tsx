@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 // Types for the recurring date picker
 export interface RecurringDate {
@@ -25,19 +31,6 @@ interface DatePickerContextType {
   updateDate: (updates: Partial<RecurringDate>) => void;
 }
 
-const defaultDate: RecurringDate = {
-  startDate: new Date(),
-  recurrenceType: "none",
-  neverEnds: true,
-  weeklyDays: [],
-  monthlyDay: 1,
-  monthlyWeek: 1,
-  monthlyWeekDay: 0,
-  yearlyMonth: 0,
-  yearlyDay: 1,
-  occurrences: 1,
-};
-
 const DatePickerContext = createContext<DatePickerContextType | undefined>(
   undefined
 );
@@ -58,17 +51,36 @@ interface DatePickerProviderProps {
 
 export const DatePickerProvider: React.FC<DatePickerProviderProps> = ({
   children,
-  initialValue = defaultDate,
+  initialValue,
   onChange,
 }) => {
-  const [selectedDate, setSelectedDate] = useState<RecurringDate>(initialValue);
+  const [selectedDate, setSelectedDate] = useState<RecurringDate | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
+  useEffect(() => {
+    const defaulted: RecurringDate = initialValue || {
+      startDate: new Date(),
+      recurrenceType: "none",
+      neverEnds: true,
+      weeklyDays: [],
+      monthlyDay: 1,
+      monthlyWeek: 1,
+      monthlyWeekDay: 0,
+      yearlyMonth: 0,
+      yearlyDay: 1,
+      occurrences: 1,
+    };
+    setSelectedDate(defaulted);
+  }, [initialValue]);
+
   const updateDate = (updates: Partial<RecurringDate>) => {
+    if (!selectedDate) return;
     const newDate = { ...selectedDate, ...updates };
     setSelectedDate(newDate);
     onChange?.(newDate);
   };
+
+  if (!selectedDate) return null;
 
   const value: DatePickerContextType = {
     selectedDate,
